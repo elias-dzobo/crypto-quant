@@ -15,8 +15,7 @@ if st.button('Get Results'):
                 # Parse the input data
                 data_points = main(input_data.lower())
 
-                if data_points:
-                
+                if len(data_points) != 0:
                     zones(data_points)
                 else:
                     st.error("No data found for the given token.")
