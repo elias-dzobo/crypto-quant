@@ -14,8 +14,12 @@ if st.button('Get Results'):
             with st.spinner("Generating graph..."):
                 # Parse the input data
                 data_points = main(input_data.lower())
+
+                if data_points:
                 
-                zones(data_points)
+                    zones(data_points)
+                else:
+                    st.error("No data found for the given token.")
             
         except ValueError:
             st.error("Please enter a valid list of numbers separated by commas.")

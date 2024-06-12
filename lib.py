@@ -4,11 +4,17 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mplfinance.original_flavor import candlestick_ohlc
 import streamlit as st 
+import psycopg2
+from dotenv import dotenv_values
+import logging
+from sqlalchemy import create_engine
+
+env = dotenv_values('./.env')
 
 
-def zones(token_data):
+def zones(data):
     # Load historical price data
-    data = pd.read_csv(token_data, parse_dates=['time'])
+    #data = pd.read_csv(token_data, parse_dates=['time'])
     data.set_index('time', inplace=True)
 
     # Convert the date to numerical format for matplotlib
@@ -75,5 +81,47 @@ def zones(token_data):
     st.pyplot(fig) 
 
 
-def main():
-    pass 
+def main(table):
+    #query = f"SELECT * FROM {table}"
+    engine = create_engine('postgres://airflow:airflow@localhost:5432/airflow')
+    try:
+        conn = psycopg2.connect(
+        host=env.get('DB_HOST'),
+        database=env.get('DB_NAME'),
+        user=env.get('DB_USER'),
+        password=env.get('DB_PASSWORD'),
+        port = env.get('DB_PORT')
+    )
+        cur = conn.cursor()
+
+        check_query = f"""
+        SELECT table_schema, table_name
+        FROM information_schema.tables
+        WHERE table_name = %s
+        """
+
+        cur.execute(check_query, (table,))
+        result = cur.fetchall()
+
+        
+
+        if not result:
+            raise Exception(f"Table '{table}' does not exist in the database.")
+
+        # Query to select all data from the specified table with schema
+        schema, table = result[0]
+
+        
+        query = f'SELECT * FROM "{schema}"."{table}"'
+
+        df = pd.read_sql_query(query, engine)
+            
+        # Close the database connection
+        cur.close()
+
+        conn.close()
+        
+        return df
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return None
