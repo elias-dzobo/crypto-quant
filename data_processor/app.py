@@ -34,9 +34,11 @@ dag = DAG(
 
 # get historical data and convert to csv 
 def get_historical_data(token):
-    end = datetime.now().strftime('%Y-%m-%d')
-    start = end - datetime.timedelta(days=7).strftime('%Y-%m-%d')
-    url = f'https://api.exchange.coinbase.com/products/{token}/candles?start={start}&end={end}&granularity=86400' 
+    end = datetime.datetime.now()
+    start = end - datetime.timedelta(days=7)
+    end = end.strftime('%Y-%m-%d')
+    start = start.strftime('%Y-%m-%d')
+    url = f'https://api.exchange.coinbase.com/products/{token}-USD/candles?start={start}&end={end}&granularity=86400' 
     data = get_json_response(url)
     return data
 
@@ -65,7 +67,8 @@ def save_to_postgres(token, data):
         host=env.get('DB_HOST'),
         database=env.get('DB_NAME'),
         user=env.get('DB_USER'),
-        password=env.get('DB_PASSWORD')
+        password=env.get('DB_PASSWORD'),
+        port = env.get('DB_PORT')
     )
     data = [tuple(v) for v in data]
     check_and_create_table(conn, token)

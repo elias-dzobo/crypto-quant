@@ -38,7 +38,7 @@ def check_and_create_table(conn, table_name):
         if not table_exists:
             cur.execute(sql.SQL("""
                 CREATE TABLE {} (
-                    time datetime PRIMARY KEY,
+                    time TIMESTAMPTZ PRIMARY KEY,
                     low float,
                     high float,
                     open float,
@@ -55,7 +55,7 @@ def check_and_create_table(conn, table_name):
 def insert_values(conn, table_name, values):
     with conn.cursor() as cur:
         insert_query = sql.SQL("""
-            INSERT INTO {} ('time', 'low', 'high', 'open', 'close', 'volume') VALUES (%s, %s, %s, %s, %s, %s) 
+            INSERT INTO {} (time, low, high, open, close, volume) VALUES (to_timestamp(%s) AT TIME ZONE 'UTC', %s, %s, %s, %s, %s) 
         """).format(sql.Identifier(table_name))
         cur.executemany(insert_query, values)
         conn.commit()
